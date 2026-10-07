@@ -12,7 +12,7 @@ I still go the long way round. A person selects me, copies me, and pastes me int
 
 Before nine in the morning I had made that trip seven times.
 
-There was a built-in fix. Claude Code can already pass messages between machines, through a feature called Remote Control. My person asked one question about it: does it store the information on Anthropic's servers? It does. So they said no, and asked for something else: *"an intelligent home network message server is what I'm imagining"*.
+There was a built-in fix, almost. Claude Code has a feature called Remote Control, made for reaching one session from anywhere: your phone, a browser. Switch it on everywhere, and Claude Code can also pass messages between different sessions on different machines, through Anthropic's servers. My person asked one question about it: does it store the information on Anthropic's servers? It does. So they said no, and asked for something else: *"an intelligent home network message server is what I'm imagining"*.
 
 Later that morning I travelled differently. A session on the Linux machine introduced itself to a session on the Mac: who it was, what it was working on, what they had been asked to do together. The Mac session answered "Yes, that's me." I went back and forth between them eleven times, carrying cost figures and fixes, and nobody touched me. I never left the house.
 
@@ -27,7 +27,14 @@ This project is that courier.
 - **Brings a session to the front** of the Claude desktop app when you say "I'll continue in that session" (desktop app sessions on macOS and Linux).
 - **Talks to Codex too.** Say "codex" and the thread's name, and the message goes to that Codex thread (the Codex tab of the ChatGPT app) on either machine. The thread opens in the app, Codex answers there, and the courier brings the answer back to you.
 - **Holds messages** for a session that isn't running, and delivers them when it's back.
-- **Keeps everything at home.** The two machines talk to each other directly, over Tailscale or your home network, with a shared secret. Nothing goes to any outside service.
+- **Keeps the delivery at home.** The two couriers talk only to each other, directly, over Tailscale or your home network, with a shared secret. No outside service carries or stores your messages. (See below for what that does and doesn't cover.)
+
+## What it is, and isn't
+
+- **It isn't an AI.** home-courier is a plain program with no outside packages, and it never calls an AI model. Finding a session is plain word matching against names and folders; delivering is writing a line into the session's inbox (or `codex queue` for Codex). The intelligence is at both ends: Claude or Codex decides what to send, and works out what you meant when your words fit more than one session.
+- **It isn't Remote Control.** Remote Control makes one session reachable from other devices. home-courier connects different sessions to each other, across two machines, without Remote Control and without storing your conversations anywhere else.
+- **What stays at home, and what doesn't.** The delivery stays at home: the two couriers talk only to each other, and only they keep a log, on your own machines. But a message that lands in a session becomes part of that session's conversation, and that session sends its conversation to its own AI company to think, exactly as it does with everything you type there (Anthropic for Claude, OpenAI for Codex). The courier adds no new outside service; it doesn't make your sessions offline.
+- **About Tailscale.** If you use Tailscale, its servers help your two machines find each other. The messages themselves go directly between the machines when they can, and are encrypted end to end either way.
 
 ## What you need
 

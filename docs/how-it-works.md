@@ -53,6 +53,10 @@ Sessions that don't fit stay quiet, so nobody wastes a turn. One yes and the two
 
 The two programs talk over HTTP on port 47321, on each machine's Tailscale (or home network) address and nowhere else. Every request must carry the shared secret, and requests from the network are accepted only from the other machine's address. Requests from the machine itself come over `127.0.0.1`.
 
+## What leaves your machines
+
+The courier itself sends nothing anywhere except to the courier on your other machine. It calls no AI model and no outside service. What does leave, as it always has: each Claude or Codex session sends its own conversation to its AI company to think, and a delivered message becomes part of that conversation like anything you type.
+
 ## Sessions that are closed
 
 If a message is for a session that isn't running, or the other machine can't be reached, the courier holds it in `~/.home-courier/held.json` and tries again every 15 seconds for up to a week. If the exact session is gone but a new one clearly took its place (the same name you gave it, or the only session in that folder), the new one gets it.
