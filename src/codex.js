@@ -124,32 +124,47 @@ function queue(threadId, text) {
 }
 
 // Leaves the message on the thread, opens it in the app, and calls onAnswer
-// with Codex's answer once the thread has stopped changing.
+// with Codex's answer when the turn is finished.
 export async function deliverToCodex(threadId, text, onAnswer) {
   if (!CODEX) throw new Error('Codex is not installed on this machine');
-  const before = (await readThread(threadId, false))?.updatedAt || 0;
+  const file = (await readThread(threadId, false))?.path || null;
+  const offset = file && fs.existsSync(file) ? fs.statSync(file).size : 0;
   await queue(threadId, text);
   openInApp(threadId);
-  watch(threadId, before, onAnswer).catch(() => {});
+  if (file) watchFile(file, offset, onAnswer).catch(() => onAnswer(null));
+  else onAnswer(null);
 }
 
-async function watch(threadId, before, onAnswer) {
+// Codex writes every thread to a file as it works and ends each finished turn
+// with a "task_complete" line holding its final answer. Waiting on that file,
+// instead of asking Codex about the thread, never disturbs the running turn.
+// (Reading the whole thread from Codex mid-turn interrupted it, 7 Oct 2026.)
+async function watchFile(file, offset, onAnswer) {
   const started = Date.now();
-  let last = before;
-  let stableSince = null;
+  let pos = offset;
+  let carry = '';
   while (Date.now() - started < WATCH_LIMIT_MS) {
-    await new Promise((r) => setTimeout(r, 5000));
-    const updated = (await readThread(threadId, false).catch(() => null))?.updatedAt || last;
-    if (updated !== last) {
-      last = updated;
-      stableSince = Date.now();
-    } else if (updated !== before && stableSince && Date.now() - stableSince > 20_000) {
-      const full = await readThread(threadId, true);
-      const turn = (full?.turns || []).slice(-1)[0];
-      const answer = (turn?.items || []).filter((i) => i.type === 'agentMessage').map((i) => i.text).pop();
-      if (answer) await onAnswer(answer);
-      return;
+    await new Promise((r) => setTimeout(r, 3000));
+    const size = fs.existsSync(file) ? fs.statSync(file).size : pos;
+    if (size <= pos) continue;
+    const fd = fs.openSync(file, 'r');
+    const buf = Buffer.alloc(size - pos);
+    fs.readSync(fd, buf, 0, buf.length, pos);
+    fs.closeSync(fd);
+    pos = size;
+    const lines = (carry + buf.toString('utf8')).split('\n');
+    carry = lines.pop();
+    for (const line of lines) {
+      let e;
+      try {
+        e = JSON.parse(line);
+      } catch {
+        continue;
+      }
+      const type = e?.payload?.type;
+      if (e.type === 'event_msg' && type === 'task_complete') return onAnswer(e.payload.last_agent_message || null);
+      if (e.type === 'event_msg' && (type === 'turn_aborted' || type === 'task_aborted')) return onAnswer(null);
     }
   }
-  await onAnswer(null);
+  return onAnswer(null);
 }

@@ -326,24 +326,35 @@ async function readThreadMeta(threadId, includeTurns = false) {
   }
 }
 
-// Waits until the thread stops changing after the queued message, then
-// returns Codex's last answer. Reading a thread does not lock it.
-async function waitForQueuedAnswer(threadId, before, timeoutMs) {
+// Codex writes every thread to a file and ends each finished turn with a
+// "task_complete" line holding its final answer. Waiting on that file never
+// disturbs the running turn; reading the thread from Codex mid-turn can
+// interrupt it (seen 7 Oct 2026).
+async function waitForQueuedAnswer(file, offset, timeoutMs) {
   const started = Date.now();
-  let last = before;
-  let stableSince = null;
+  let pos = offset;
+  let carry = "";
   while (Date.now() - started < timeoutMs) {
-    await new Promise((r) => setTimeout(r, 5000));
-    const t = await readThreadMeta(threadId);
-    const updated = t?.updatedAt || 0;
-    if (updated !== last) {
-      last = updated;
-      stableSince = Date.now();
-    } else if (updated !== before && stableSince && Date.now() - stableSince > 20_000) {
-      const full = await readThreadMeta(threadId, true);
-      const turn = (full?.turns || []).slice(-1)[0];
-      const text = (turn?.items || []).filter((i) => i.type === "agentMessage").map((i) => i.text).pop() || "";
-      return { status: turn?.status || "completed", finalText: text };
+    await new Promise((r) => setTimeout(r, 3000));
+    const size = fs.existsSync(file) ? fs.statSync(file).size : pos;
+    if (size <= pos) continue;
+    const fd = fs.openSync(file, "r");
+    const buf = Buffer.alloc(size - pos);
+    fs.readSync(fd, buf, 0, buf.length, pos);
+    fs.closeSync(fd);
+    pos = size;
+    const lines = (carry + buf.toString("utf8")).split("\n");
+    carry = lines.pop();
+    for (const line of lines) {
+      let e;
+      try {
+        e = JSON.parse(line);
+      } catch {
+        continue;
+      }
+      const type = e?.payload?.type;
+      if (e.type === "event_msg" && type === "task_complete") return { status: "completed", finalText: e.payload.last_agent_message || "" };
+      if (e.type === "event_msg" && (type === "turn_aborted" || type === "task_aborted")) return { status: "interrupted", finalText: "" };
     }
   }
   return { status: "still running", finalText: "" };
@@ -377,7 +388,8 @@ async function runQueuedTurn(args, mode) {
       server.close();
     }
   }
-  const before = (await readThreadMeta(threadId))?.updatedAt || 0;
+  const file = (await readThreadMeta(threadId))?.path || null;
+  const offset = file && fs.existsSync(file) ? fs.statSync(file).size : 0;
   const queued = await queueMessage(threadId, args.prompt, args);
   showInApp(threadId);
   const result = {
@@ -388,7 +400,9 @@ async function runQueuedTurn(args, mode) {
     note: "Message queued and the thread opened in the ChatGPT app (Codex tab). Codex runs it there, live, when the app has the thread open; no Retry needed. Read the answer later with codex-read, or pass waitForCompletion to wait for it.",
   };
   if (args.waitForCompletion === true) {
-    Object.assign(result, await waitForQueuedAnswer(threadId, before, Number(args.timeoutMs || DEFAULT_TIMEOUT_MS)));
+    Object.assign(result, file
+      ? await waitForQueuedAnswer(file, offset, Number(args.timeoutMs || DEFAULT_TIMEOUT_MS))
+      : { status: "queued", finalText: "", note: result.note + " (Could not find the thread's file to wait on; read it later with codex-read.)" });
   }
   return result;
 }
