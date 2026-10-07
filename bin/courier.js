@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// home-courier setup and control.
+// Agents Courier setup and control.
 //   node bin/courier.js pair <this-name> <this-address> <other-name> <other-address>   name the two machines
 //   node bin/courier.js setup [secret]  make the shared secret (or save the one from the other machine)
 //   node bin/courier.js install         start the courier at login, give every session the courier tool, write the rule into ~/.claude/CLAUDE.md
@@ -30,15 +30,24 @@ function stableNode() {
 const NODE = stableNode();
 const DAEMON = path.join(ROOT, 'src', 'daemon.js');
 const MCP = path.join(ROOT, 'src', 'mcp.js');
-const LABEL = 'home-courier';
+const LABEL = 'agents-courier';
+// What the project was called before; install removes those leftovers.
+const OLD_LABEL = 'home-courier';
+const OLD_PLIST = path.join(HOME, 'Library', 'LaunchAgents', `com.${OLD_LABEL}.plist`);
+const OLD_UNIT = path.join(HOME, '.config', 'systemd', 'user', `${OLD_LABEL}.service`);
 const PLIST = path.join(HOME, 'Library', 'LaunchAgents', `com.${LABEL}.plist`);
 const UNIT = path.join(HOME, '.config', 'systemd', 'user', `${LABEL}.service`);
 const RULE = path.join(ROOT, 'rules', 'courier-rule.md');
 const SKILL_SRC = path.join(ROOT, 'rules', 'courier-skill.md');
 const SKILL_DIR = path.join(HOME, '.claude', 'skills', 'courier');
 const CLAUDE_MD = path.join(HOME, '.claude', 'CLAUDE.md');
-const RULE_START = '<!-- home-courier rule: start (written by home-courier install, edit rules/courier-rule.md instead) -->';
-const RULE_END = '<!-- home-courier rule: end -->';
+const RULE_START = '<!-- agents-courier rule: start (written by agents-courier install, edit rules/courier-rule.md instead) -->';
+const RULE_END = '<!-- agents-courier rule: end -->';
+// Rule blocks written under either name are replaced.
+const RULE_MARKERS = [
+  ['<!-- agents-courier rule: start', '<!-- agents-courier rule: end -->'],
+  ['<!-- home-courier rule: start', '<!-- home-courier rule: end -->'],
+];
 
 function pair(args) {
   const [thisName, thisAddress, otherName, otherAddress] = args;
@@ -114,7 +123,7 @@ function installService() {
   } else {
     fs.mkdirSync(path.dirname(UNIT), { recursive: true });
     fs.writeFileSync(UNIT, `[Unit]
-Description=home-courier
+Description=Agents Courier
 After=network-online.target tailscaled.service
 
 [Service]
@@ -133,6 +142,26 @@ WantedBy=default.target
   console.log('Courier starts at login and is running now.');
 }
 
+// Stops and removes an installation made under the old name, home-courier.
+// The settings folder has already moved (src/config.js does that on start).
+function removeOldName() {
+  let found = false;
+  if (IS_MAC && fs.existsSync(OLD_PLIST)) {
+    spawnSync('launchctl', ['bootout', `gui/${process.getuid()}`, OLD_PLIST], { stdio: 'ignore' });
+    fs.rmSync(OLD_PLIST, { force: true });
+    found = true;
+  }
+  if (!IS_MAC && fs.existsSync(OLD_UNIT)) {
+    spawnSync('systemctl', ['--user', 'disable', '--now', `${OLD_LABEL}.service`], { stdio: 'ignore' });
+    fs.rmSync(OLD_UNIT, { force: true });
+    spawnSync('systemctl', ['--user', 'daemon-reload'], { stdio: 'ignore' });
+    found = true;
+  }
+  const removed = spawnSync('claude', ['mcp', 'remove', '--scope', 'user', OLD_LABEL], { stdio: 'ignore' });
+  if (removed.status === 0) found = true;
+  if (found) console.log('Removed the old home-courier installation.');
+}
+
 function installTool() {
   spawnSync('claude', ['mcp', 'remove', '--scope', 'user', LABEL], { stdio: 'ignore' });
   execFileSync('claude', ['mcp', 'add', '--scope', 'user', LABEL, '--', NODE, MCP], { stdio: 'inherit' });
@@ -143,10 +172,13 @@ function installTool() {
 // words. Install writes it into ~/.claude/CLAUDE.md between markers, replacing
 // any earlier copy, so every Claude Code session on the machine reads it.
 function stripRule(text) {
-  const a = text.indexOf(RULE_START);
-  const b = text.indexOf(RULE_END);
-  if (a === -1 || b === -1) return text;
-  return (text.slice(0, a).trimEnd() + '\n' + text.slice(b + RULE_END.length).replace(/^\n+/, '\n')).trimEnd() + '\n';
+  for (const [start, end] of RULE_MARKERS) {
+    const a = text.indexOf(start);
+    const b = text.indexOf(end);
+    if (a === -1 || b === -1) continue;
+    text = (text.slice(0, a).trimEnd() + '\n' + text.slice(b + end.length).replace(/^\n+/, '\n')).trimEnd() + '\n';
+  }
+  return text;
 }
 
 function installRule() {
@@ -172,7 +204,7 @@ function uninstall() {
   spawnSync('claude', ['mcp', 'remove', '--scope', 'user', LABEL], { stdio: 'inherit' });
   if (fs.existsSync(CLAUDE_MD)) fs.writeFileSync(CLAUDE_MD, stripRule(fs.readFileSync(CLAUDE_MD, 'utf8')));
   fs.rmSync(SKILL_DIR, { recursive: true, force: true });
-  console.log('Courier removed. Its log and secret stay in ~/.home-courier.');
+  console.log('Courier removed. Its log and secret stay in ~/.agents-courier.');
 }
 
 async function status() {
@@ -198,6 +230,7 @@ try {
   else if (cmd === 'install') {
     if (!fs.existsSync(MACHINES_FILE)) throw new Error('Run pair first.');
     if (!readSecret()) throw new Error('Run setup first.');
+    removeOldName();
     installService();
     installTool();
     installRule();

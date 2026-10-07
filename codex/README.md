@@ -21,7 +21,7 @@ A Claude session can wait for the answer (`waitForCompletion: true`) or read it 
 You need the `codex` command on your PATH (or set `CODEX_CLI_PATH`). Then:
 
 ```bash
-claude mcp add --scope user codex -- node ~/home-courier/codex/codex-tool.mjs
+claude mcp add --scope user codex -- node ~/agents-courier/codex/codex-tool.mjs
 ```
 
 ## You have to allow it

@@ -1,11 +1,11 @@
 ---
 name: courier
-description: Start working with another session, or a Codex thread, on either machine through the home courier. Type /courier with who to find and what to do together.
+description: Start working with another session, or a Codex thread, on either machine through Agents Courier. Type /courier with who to find and what to do together.
 argument-hint: [who to find] ; [what to work on together]
 disable-model-invocation: true
 ---
 
-The user wants you to work together with another session through the home courier. Their words:
+The user wants you to work together with another session through Agents Courier. Their words:
 
 $ARGUMENTS
 

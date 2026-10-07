@@ -1,6 +1,6 @@
 // Decided values, plus the two things that differ per home: which two machines
-// take part (in ~/.home-courier/machines.json) and the shared secret (in
-// ~/.home-courier/secret). Both are written by `node bin/courier.js setup`.
+// take part (in ~/.agents-courier/machines.json) and the shared secret (in
+// ~/.agents-courier/secret). Both are written by `node bin/courier.js setup`.
 import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
@@ -9,7 +9,16 @@ export const PORT = 47321;
 
 export const HOME = os.homedir();
 export const SESSIONS_DIR = path.join(HOME, '.claude', 'sessions');
-export const DATA_DIR = path.join(HOME, '.home-courier');
+export const DATA_DIR = path.join(HOME, '.agents-courier');
+
+// The project used to be called home-courier. The first time the new name
+// runs, its settings folder (secret, machine pair, logs) moves over intact.
+const OLD_DATA_DIR = path.join(HOME, '.home-courier');
+if (!fs.existsSync(DATA_DIR) && fs.existsSync(OLD_DATA_DIR)) {
+  try {
+    fs.renameSync(OLD_DATA_DIR, DATA_DIR);
+  } catch {}
+}
 export const LOG_DIR = path.join(DATA_DIR, 'log');
 export const HELD_FILE = path.join(DATA_DIR, 'held.json');
 export const SECRET_FILE = path.join(DATA_DIR, 'secret');

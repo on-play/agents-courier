@@ -23,7 +23,7 @@ const TOOLS = [
   {
     name: 'send',
     description:
-      'Send a message to another Claude Code session, or to a Codex thread (say "codex" in `to`), on either machine, through the home courier (never through outside servers). A Codex thread answers by itself; its answer comes back to you as a courier reply. "to" can be a session name, an id like "linux:9106", or a plain description like "whoever is on the checkout page". If more than one session fits, nothing is sent and you get the list back: ask the user which one, then send again using the id. To start a new working conversation the user asked for, use introduce instead. Using this tool means the message is ready; write it so the other session can act on it without this conversation.',
+      'Send a message to another Claude Code session, or to a Codex thread (say "codex" in `to`), on either machine, through Agents Courier (never through outside servers). A Codex thread answers by itself; its answer comes back to you as a courier reply. "to" can be a session name, an id like "linux:9106", or a plain description like "whoever is on the checkout page". If more than one session fits, nothing is sent and you get the list back: ask the user which one, then send again using the id. To start a new working conversation the user asked for, use introduce instead. Using this tool means the message is ready; write it so the other session can act on it without this conversation.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -163,7 +163,7 @@ rl.on('line', async (line) => {
     return reply(id, {
       protocolVersion: params?.protocolVersion || '2025-06-18',
       capabilities: { tools: {} },
-      serverInfo: { name: 'home-courier', version: '0.1.0' },
+      serverInfo: { name: 'agents-courier', version: '0.1.0' },
     });
   }
   if (method === 'ping') return reply(id, {});

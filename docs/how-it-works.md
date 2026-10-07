@@ -1,4 +1,4 @@
-# How home-courier works
+# How Agents Courier works
 
 ## The pieces
 
@@ -59,11 +59,11 @@ The courier itself sends nothing anywhere except to the courier on your other ma
 
 ## Sessions that are closed
 
-If a message is for a session that isn't running, or the other machine can't be reached, the courier holds it in `~/.home-courier/held.json` and tries again every 15 seconds for up to a week. If the exact session is gone but a new one clearly took its place (the same name you gave it, or the only session in that folder), the new one gets it.
+If a message is for a session that isn't running, or the other machine can't be reached, the courier holds it in `~/.agents-courier/held.json` and tries again every 15 seconds for up to a week. If the exact session is gone but a new one clearly took its place (the same name you gave it, or the only session in that folder), the new one gets it.
 
 ## The log
 
-Every message, reply, delivery and hold is written to `~/.home-courier/log/<date>.jsonl` on the machine that handled it. Nothing else keeps a copy.
+Every message, reply, delivery and hold is written to `~/.agents-courier/log/<date>.jsonl` on the machine that handled it. Nothing else keeps a copy.
 
 ## Codex threads
 
@@ -79,10 +79,10 @@ Every Claude desktop app session has an app link, `claude://claude.ai/epitaxy/<i
 
 | Where | What |
 | --- | --- |
-| `~/.home-courier/machines.json` | the two machines' names and addresses |
-| `~/.home-courier/secret` | the shared secret (only you can read it) |
-| `~/.home-courier/log/` | one log file per day |
-| `~/.home-courier/held.json` | messages waiting to be delivered |
-| `~/.home-courier/courier.log` | the program's own output |
+| `~/.agents-courier/machines.json` | the two machines' names and addresses |
+| `~/.agents-courier/secret` | the shared secret (only you can read it) |
+| `~/.agents-courier/log/` | one log file per day |
+| `~/.agents-courier/held.json` | messages waiting to be delivered |
+| `~/.agents-courier/courier.log` | the program's own output |
 | `~/.claude/CLAUDE.md` | the rule, between two marked lines |
 | `~/.claude/skills/courier/` | the `/courier` command |

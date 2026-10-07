@@ -9,7 +9,7 @@ const sessions = [
   S('mac', 11044, 'API pricing research', '/Users/me/Projects/shop-app', true),
   S('mac', 66190, 'Search page backend', '/Users/me/Projects/shop-app'),
   S('mac', 7847, 'Brainstorm new feature', '/Users/me/Projects/shop-app', true),
-  S('mac', 21218, 'New session', '/Users/me/Projects/home-courier', true),
+  S('mac', 21218, 'New session', '/Users/me/Projects/agents-courier', true),
   S('linux', 107620, 'checkout-51', '/home/me/Projects/services/checkout'),
   S('linux', 13292, 'billing-email-templates-c5', '/home/me/Projects/services/billing-email-templates'),
   S('linux', 333592, 'payment-form-v2', '/home/me/Projects/services/checkout', true),
@@ -29,7 +29,7 @@ assert.equal(pick('Brainstorm New Feature').match.id, 'mac:7847');
 assert.equal(pick('whoever is on the payment form').match.id, 'linux:333592');
 assert.equal(pick('the search page backend session').match.id, 'mac:66190');
 assert.equal(pick('billing email templates a5').match.id, 'linux:580127');
-assert.equal(pick('the home courier session').match.id, 'mac:21218');
+assert.equal(pick('the agents courier session').match.id, 'mac:21218');
 
 // several fit: nothing is picked, the sender asks the user
 const billing = pick('whoever is on the billing work');

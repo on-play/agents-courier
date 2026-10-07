@@ -1,4 +1,4 @@
-# home-courier
+# Agents Courier
 
 **Your Claude Code sessions on two computers can't talk to each other, so you end up carrying their messages by hand.**
 
@@ -31,8 +31,8 @@ This project is that courier.
 
 ## What it is, and isn't
 
-- **It isn't an AI.** home-courier is a plain program with no outside packages, and it never calls an AI model. Finding a session is plain word matching against names and folders; delivering is writing a line into the session's inbox (or `codex queue` for Codex). The intelligence is at both ends: Claude or Codex decides what to send, and works out what you meant when your words fit more than one session.
-- **It isn't Remote Control.** Remote Control makes one session reachable from other devices. home-courier connects different sessions to each other, across two machines, without Remote Control and without storing your conversations anywhere else.
+- **It isn't an AI.** Agents Courier is a plain program with no outside packages, and it never calls an AI model. Finding a session is plain word matching against names and folders; delivering is writing a line into the session's inbox (or `codex queue` for Codex). The intelligence is at both ends: Claude or Codex decides what to send, and works out what you meant when your words fit more than one session.
+- **It isn't Remote Control.** Remote Control makes one session reachable from other devices. Agents Courier connects different sessions to each other, across two machines, without Remote Control and without storing your conversations anywhere else.
 - **What stays at home, and what doesn't.** The delivery stays at home: the two couriers talk only to each other, and only they keep a log, on your own machines. But a message that lands in a session becomes part of that session's conversation, and that session sends its conversation to its own AI company to think, exactly as it does with everything you type there (Anthropic for Claude, OpenAI for Codex). The courier adds no new outside service; it doesn't make your sessions offline.
 - **About Tailscale.** If you use Tailscale, its servers help your two machines find each other. The messages themselves go directly between the machines when they can, and are encrypted end to end either way.
 
@@ -48,23 +48,23 @@ This project is that courier.
 On **both** machines, get the code:
 
 ```bash
-git clone https://github.com/on-play/home-courier.git ~/home-courier
+git clone https://github.com/on-play/agents-courier.git ~/agents-courier
 ```
 
 On the **first** machine, name the two machines (any short names) with their addresses, then make the shared secret:
 
 ```bash
-cd ~/home-courier
+cd ~/agents-courier
 node bin/courier.js pair mac 100.64.0.1 linux 100.64.0.2
 node bin/courier.js setup
 ```
 
-`setup` prints a short fingerprint. Show the secret itself with `cat ~/.home-courier/secret` and copy it to the second machine however you like.
+`setup` prints a short fingerprint. Show the secret itself with `cat ~/.agents-courier/secret` and copy it to the second machine however you like.
 
 On the **second** machine, the same names, swapped, and the secret you copied:
 
 ```bash
-cd ~/home-courier
+cd ~/agents-courier
 node bin/courier.js pair linux 100.64.0.2 mac 100.64.0.1
 node bin/courier.js setup PASTE_THE_SECRET
 ```

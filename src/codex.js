@@ -55,7 +55,7 @@ async function withCodex(fn) {
     proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
   });
   try {
-    await request('initialize', { clientInfo: { name: 'home_courier', title: 'Home courier', version: '0.1.0' }, capabilities: { experimentalApi: true } });
+    await request('initialize', { clientInfo: { name: 'agents_courier', title: 'Agents Courier', version: '0.1.0' }, capabilities: { experimentalApi: true } });
     proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'initialized', params: {} }) + '\n');
     return await fn(request);
   } finally {

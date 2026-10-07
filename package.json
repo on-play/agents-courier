@@ -1,9 +1,9 @@
 {
-  "name": "home-courier",
+  "name": "agents-courier",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Carries messages between Claude Code sessions on the Mac and the Linux machine, over the home network only.",
+  "description": "Carries messages between Claude Code sessions and Codex threads on two computers, over your home network.",
   "engines": { "node": ">=22" },
   "scripts": {
     "check": "for f in src/*.js bin/*.js codex/*.mjs; do node --check $f || exit 1; done && node test/match.test.js"

@@ -1,6 +1,6 @@
-## Messages between sessions (home courier)
+## Messages between sessions (Agents Courier)
 
-Every Claude Code session on both of the user's machines has the `home-courier` tool, whether it runs in the desktop app, a terminal, or VS Code. It carries messages between sessions on both machines over the home network only. The user starts courier conversations; once started, the sessions work together through it without the user carrying messages.
+Every Claude Code session on both of the user's machines has the `agents-courier` tool, whether it runs in the desktop app, a terminal, or VS Code. It carries messages between sessions on both machines over the home network only. The user starts courier conversations; once started, the sessions work together through it without the user carrying messages.
 
 - **Starting is the user's call.** Do not start a courier conversation on your own. When the user asks you to work with a session on the other machine (usually with `/courier`), use `introduce`: it tells the live sessions there who you are, what you are working on, and what the user wants done together, and asks which of them fits.
 - **When you get an introduction.** A courier message that starts with "Introduction:" comes from a session the user just set up. If it fits what you are working on, answer with `reply`: yes, and two or three lines on what you are working on. If it does not fit, do not reply at all.
